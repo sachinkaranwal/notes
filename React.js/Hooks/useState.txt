@@ -1,0 +1,155 @@
+useState is a Hook in react, that is used to manage local state in functional Components
+
+when we call useState it returns an array where the first element is the state variable and the second element is the state
+setter function
+e.g. 
+import { useState } from "react"
+ function Counter() {
+    const [counter, setCounter] = useState(0)
+    returns(<>
+    <p>{counter}</p>
+    <button onClick={() => { setCounter(count+1) }}>Increase</button>
+    </>)
+ }
+
+Key Points
+1)  a state variable can only be changed(or updated) by using the setter function
+   e.g. in the above example , we can not update count as count = count + 1, it can only be updated using setCount
+2) useState Hook should only be used inside a component and only at the top level(not inside any conditional statement or functions)
+3) the setter function does not update the state immediatly but it schedules a render
+   e.g. setCount(count+1)
+     console.log(count) => here we will not have the updated count value as setCount is not updating the count immediately
+                           but scheduling a render with the updated count value.
+4) if the updated state depends on the previous state then we should use functional updates,
+   setCount(prev => prev + 1) is a better way as here prev will always be the updated state value
+   e.g. count -> 0
+   setCount(count+1)
+   setCount(count+1)
+   setCount(count+1) 
+   at the end the count will be updated to 1 only, Reason => it schedules 3 updated and all will be updating to same value
+   setCount(0+1), 
+   setCount(0+1), 
+   setCount(0+1)
+   it can be acheived using functional updates
+   setCount(prev => prev + 1)
+   setCount(prev => prev + 1)
+   setCount(prev => prev + 1)
+   here prev will always be the updated state value, so it will behave like
+   setCount(0+1)
+   setCount(1+1)
+   setCount(2+1)
+   and the final output will be 3.
+5) initialState 
+   we can provide the initial value and when the component mounts for the first time, that will be the value assigned to
+   the state variable, 
+   react keeps the track when a component is mounting for the first time and when it re-mounts, the initial State will be
+   assigned to state variable only in the first render.
+6) state variable are immutable
+   consider the example
+   const [user, setUser] = useState({name:"Sachin", age: 26})
+   user.age = 29
+   setUser(user) => doesn't effect the state value.
+7) state setter does not merge the state but replace it completely
+   in the previous example
+   setUser({age: 29}) -> user => { age: 29 } => name is lost.
+   correct way is 
+   setUser({...user, age: 29})
+8) if the state's updated value is same, then react skip the re-render
+9) avoid maintaining multuple local states in a component, as it make it complex and difficult to manage,
+   instead we can group the states into one,
+   e.g.
+    const [firstName, setFirstName] = useState("")
+    const [lastName, setLastName] = useState("")
+    const [email, setEmail] = useState("")
+    instead we can use
+    const [userDetail, setUserDetail] = useState({
+      firstName: '',
+      lastName: '',
+      email: '',
+    })
+10) Avoid Derived states,
+    avoid states dependent on props or other state values.
+
+
+Questions
+1) Why are hooks order-dependent?
+   A React component is basically a js function, rendering a component means executing the function code line by line
+   when react renders a component it stores all the hooks in a particular order,
+   now each hook is identified by its order
+   its actually a linked list at the end, Hook #0 , Hook #1, and so on.
+
+2) Why can’t we call useState inside conditions?
+   if we call useState inside a condition then during the render, this hook may be there or may not be there depending on the
+   condition,
+   lets assume it is there so it will fit in the hook's linked list and it will be a providing a link to next hook as well,
+   suddenly in some render its not there, so the hook's list will loose this hook as well as the links following to this hook.
+   so we can't use useState inside conditions.
+3) What happens internally when setState is called?
+   when setState is called it will schedule a render with the updated state in the queue.
+4) Why is state update asynchronous?
+5) What is batching?
+6) What is stale closure?
+7) How does React know which state belongs to which component?
+8) Why does mutating state sometimes not re-render?
+   mutating state may not re-render in the following cases,
+   i) the state value is not changed -> react realise that the state value is still the same even after the update, so it skips
+                                        the re-render for performance optimization
+   ii) batch udpates => if there are many updates scheduled, then the last one will appear on UI.
+9) What is lazy initialization?
+10) When should we prefer useReducer over useState?
+   useState is prefered when the state is locally used and updated, and shared only to children or grandchildren
+   useReducer is used when many of the components are using the state, and the state is being shared among, children, parents,
+   and siblings
+whats the output
+11) 
+   const [count, setCount] = useState(0);
+   setCount(count + 1);
+   setCount(count + 1);
+   console.log(count);
+   output => 0
+12) 
+   setCount(prev => prev + 1);
+   setCount(prev => prev + 1);
+   final state  => 2
+13) Will it re-render?
+   const [obj, setObj] = useState({ a: 1 });
+   setObj(obj);
+   no - as no change in state value, so react will skip the re-render
+14) Re-render?
+   const [x, setX] = useState(0);
+   setX(0);
+15) Re-render?
+   const [arr, setArr] = useState([1,2]);
+   arr.push(3);
+   setArr(arr);
+16) What happens if setter is called during render?
+   it will cause infinite renders => why , when setter is called it will schedule a render then during that render again the
+   setter is called and again a render will be scheduled, and it will go on and on.
+   so it will cause infinite renders.
+17) Can useState cause infinite loop?
+   yes, if the setter is called during a render.
+
+18) What if state update depends on props?
+
+19) How does React compare state values?
+
+20) What if you pass object as initial state directly vs function?
+   if we pass an object as initial state directly, the object literal is created in every render but it is ignored everytime after
+   the first render, 
+   although it is ignored after the first render but the creation time is still there, and if its a time taking operation 
+   the computation will be there in every render but the value is ignored.
+   to avoid this we can use a function
+   now this function will also return the initialState object but it runs only once, and we can avoid creating the object everytime.
+   its very usefull if the initial state includes very heavy calculations
+21) Does setter identity change between renders?
+
+22) Can we store function in state?
+   yes, we can store functions in state, the only thing to take care about is initial value, 
+   if we just give the initial value as a function it will think of it as the initialState function, so we need to return the
+   initial value of the function from a function.
+   e.g. const [fn, setFn] = useState(() => { return () => console.log("I am the initial value fn")})
+23) Why sometimes setState doesn’t update immediately?
+
+24) How to force re-render?
+
+25) What happens if parent re-renders but state unchanged?
