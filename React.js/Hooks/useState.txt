@@ -1,4 +1,4 @@
-useState is a Hook in react, that is used to manage local state in functional Components
+useState is a Hook in react, that is used to manage local state in Functional Components
 
 when we call useState it returns an array where the first element is the state variable and the second element is the state
 setter function
@@ -13,24 +13,30 @@ import { useState } from "react"
  }
 
 Key Points
-1)  a state variable can only be changed(or updated) by using the setter function
-   e.g. in the above example , we can not update count as count = count + 1, it can only be updated using setCount
-2) useState Hook should only be used inside a component and only at the top level(not inside any conditional statement or functions)
-3) the setter function does not update the state immediatly but it schedules a render
-   e.g. setCount(count+1)
+1) A state variable can only be changed(or updated) by using the setter function
+   e.g. 
+    In the above example, we can not update count as count = count + 1, it can only be updated using setCount.
+    count = count + 1, this statement will completely be ignored by React, it will not do anything.
+2) useState Hook should only be used inside a component and only at the top level(not inside any conditional statement 
+   or function body)
+3) The setter function does not update the state immediatly but it schedules a render
+   e.g. 
+     setCount(count+1)
      console.log(count) => here we will not have the updated count value as setCount is not updating the count immediately
                            but scheduling a render with the updated count value.
-4) if the updated state depends on the previous state then we should use functional updates,
+4) If the updated state depends on the previous state then we should use functional updates.
    setCount(prev => prev + 1) is a better way as here prev will always be the updated state value
-   e.g. count -> 0
+   e.g. 
+   assume count -> 0 initially,
    setCount(count+1)
    setCount(count+1)
    setCount(count+1) 
-   at the end the count will be updated to 1 only, Reason => it schedules 3 updated and all will be updating to same value
-   setCount(0+1), 
-   setCount(0+1), 
-   setCount(0+1)
-   it can be acheived using functional updates
+   at the end the count will be updated to 1, 
+   Reason => it schedules 3 updates and all will be updating to same value
+   setCount(0+1) or setCount(1),
+   setCount(0+1) or setCount(1),
+   setCount(0+1) or setCount(1)
+   if we want count to be updated to 3, it can be acheived using functional updates
    setCount(prev => prev + 1)
    setCount(prev => prev + 1)
    setCount(prev => prev + 1)
@@ -54,9 +60,9 @@ Key Points
    setUser({age: 29}) -> user => { age: 29 } => name is lost.
    correct way is 
    setUser({...user, age: 29})
-8) if the state's updated value is same, then react skip the re-render
-9) avoid maintaining multuple local states in a component, as it make it complex and difficult to manage,
-   instead we can group the states into one,
+8) If the state's updated value is same, then react skip the re-render
+9) Avoid maintaining multiple local states in a component, as it makes the component complex and difficult to manage,
+   instead we can group the states,
    e.g.
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
@@ -67,13 +73,13 @@ Key Points
       lastName: '',
       email: '',
     })
-10) Avoid Derived states,
+10) Avoid Derived states
     avoid states dependent on props or other state values.
 
 
 Questions
 1) Why are hooks order-dependent?
-   A React component is basically a js function, rendering a component means executing the function code line by line
+   A React component is basically a JavaScript function, rendering a component means executing the function code line by line
    when react renders a component it stores all the hooks in a particular order,
    now each hook is identified by its order
    its actually a linked list at the end, Hook #0 , Hook #1, and so on.
@@ -81,14 +87,26 @@ Questions
 2) Why can’t we call useState inside conditions?
    if we call useState inside a condition then during the render, this hook may be there or may not be there depending on the
    condition,
-   lets assume it is there so it will fit in the hook's linked list and it will be a providing a link to next hook as well,
-   suddenly in some render its not there, so the hook's list will loose this hook as well as the links following to this hook.
+   lets assume it is there so it will fit in the hook's linked list and it will be providing a link to next hook as well,
+   suddenly in some render the condition fails and now the hook is not there, so the hook's list will loose this hook as well as 
+   the links following this hook.
    so we can't use useState inside conditions.
 3) What happens internally when setState is called?
    when setState is called it will schedule a render with the updated state in the queue.
 4) Why is state update asynchronous?
+   state updates in react are asynchronous, that means when setState function is called it doesn't update the state immediately
+   but it schedules an update and then the program goes to the next line without waiting for setState task,
+   why it is asynchronous
+   we can state two reasons(or benifits)
+   i) it waits for the current execution context to be finished so that it can take all the updates into consideration
+   ii) it groups multiple updates and re-render only with the final updated value (not with intermittent updates)
 5) What is batching?
+   batching is a mechanism of React where it groups multiple updates together, then while updating the state it only re-render
+   the component with the final updated value.
 6) What is stale closure?
+   stale closeure means that a callback function(setTimeout, setInterval etc) makes a closure with the old state, and remembers its
+   old value. This may lead to unexpected bugs in our code.
+   To avoid stale closure we can use functional updates
 7) How does React know which state belongs to which component?
 8) Why does mutating state sometimes not re-render?
    mutating state may not re-render in the following cases,
@@ -151,5 +169,6 @@ whats the output
 23) Why sometimes setState doesn’t update immediately?
 
 24) How to force re-render?
+
 
 25) What happens if parent re-renders but state unchanged?
