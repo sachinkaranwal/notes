@@ -108,12 +108,25 @@ Questions
    old value. This may lead to unexpected bugs in our code.
    To avoid stale closure we can use functional updates
 7) How does React know which state belongs to which component?
+   React Knows which state belongs to which component, as it maintains a fiber node for each of the component instance, and each
+   fiber stores its own linked list of hooks.
 8) Why does mutating state sometimes not re-render?
    mutating state may not re-render in the following cases,
    i) the state value is not changed -> react realise that the state value is still the same even after the update, so it skips
                                         the re-render for performance optimization
    ii) batch udpates => if there are many updates scheduled, then the last one will appear on UI.
 9) What is lazy initialization?
+   lazy initialization refers to using function for giving the initial value to useState call,
+   e.g. 
+   const [user, setUser] = useState({name: 'ABC'})
+   const [use, setUser] = useState(() => ({name: 'ABC'}))
+   in first case React creates the object literal in every render but uses it only for the first render.
+   second is the case with lazy initialization, here react call this function only in the first render and hence in other renders
+   the unnecessery step of creating the object will not occur.
+   the benifit of lazy initialization seems noticable when we are doing some heavy calculation for initial value.
+   useState(heavyCalculation()) vs useState(() => heavyCalculation())
+   in case of lazy initialization the heavy calculation will only be done once in the first render, but in the other case this
+   calculation is being done on every render but used only in the first render.
 10) When should we prefer useReducer over useState?
    useState is prefered when the state is locally used and updated, and shared only to children or grandchildren
    useReducer is used when many of the components are using the state, and the state is being shared among, children, parents,
@@ -136,20 +149,36 @@ whats the output
 14) Re-render?
    const [x, setX] = useState(0);
    setX(0);
+   no - as there is no change in the state value.
 15) Re-render?
    const [arr, setArr] = useState([1,2]);
    arr.push(3);
    setArr(arr);
+   no - as states are immutable so arr.push(3) will not change arr, and setArr(arr) will not notice a change in value.
 16) What happens if setter is called during render?
-   it will cause infinite renders => why , when setter is called it will schedule a render then during that render again the
+   it will cause infinite renders => why , when setter is called it will schedule a render, then during that render again the
    setter is called and again a render will be scheduled, and it will go on and on.
    so it will cause infinite renders.
 17) Can useState cause infinite loop?
    yes, if the setter is called during a render.
 
 18) What if state update depends on props?
+    it can sometime lead to unexpected results, consider the case
+    const [user, setUser] = useState({email: props.email})
+    let say we are using user state in a form and expecting email as pre-populated value as it is already availble,
+    asumme that after fist render the email prop is updated, the updated value will not be a part of initial State in user
+    and when user open the form component he will not see the updated email but he will see the value with which user
+    was rendered first time.
 
 19) How does React compare state values?
+   React compares the state values using the reference equality, specifically the Object.is() algorithm.
+   whenver the state changes react checks it by Object.is(oldValue, newValue) 
+   if both values are same it skips the re-render.
+   in case of objects/arrays, it compares the reference and not the value
+   e.g. 
+    const [user, setUser] = useState({ name: "Sachin"})
+    setUser({name: "Sachin"})
+    it will cause a re-render as this object is a different one.
 
 20) What if you pass object as initial state directly vs function?
    if we pass an object as initial state directly, the object literal is created in every render but it is ignored everytime after
@@ -160,15 +189,17 @@ whats the output
    now this function will also return the initialState object but it runs only once, and we can avoid creating the object everytime.
    its very usefull if the initial state includes very heavy calculations
 21) Does setter identity change between renders?
-
+    no, react ensures that for each render the setter function is same, or has the same reference or has the same identity.
 22) Can we store function in state?
    yes, we can store functions in state, the only thing to take care about is initial value, 
    if we just give the initial value as a function it will think of it as the initialState function, so we need to return the
    initial value of the function from a function.
    e.g. const [fn, setFn] = useState(() => { return () => console.log("I am the initial value fn")})
 23) Why sometimes setState doesn’t update immediately?
-
+    setState NEVER updates state immediately inside the same render.
+    sometimes the result may appear so fast that it appears to be immediate,
 24) How to force re-render?
 
 
 25) What happens if parent re-renders but state unchanged?
+
