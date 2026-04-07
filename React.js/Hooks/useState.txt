@@ -1,0 +1,273 @@
+useState is a Hook in react, that is used to manage local states in Functional Components
+
+when we call useState it returns an array where the first element is the state variable and the second element is the state
+setter function
+e.g. 
+import { useState } from "react"
+ function Counter() {
+    const [counter, setCounter] = useState(0)
+    returns(<>
+    <p>{counter}</p>
+    <button onClick={() => { setCounter(count+1) }}>Increase</button>
+    </>)
+ }
+ 
+Key Points
+1) A state variable can only be changed(or updated) by using the setter function
+   e.g. 
+    In the above example, we can not update count as count = count + 1, it can only be updated using setCount.
+    count = count + 1, this statement will completely be ignored by React, it will not do anything.
+2) useState Hook should only be used inside a component and only at the top level(not inside any conditional statement 
+   or function body)
+3) The setter function does not update the state immediatly but it schedules a render
+   e.g. 
+     setCount(count+1)
+     console.log(count) => here we will not have the updated count value as setCount is not updating the count immediately
+                           but scheduling a render with the updated count value.
+4) If the updated state depends on the previous state then we should use functional updates.
+   setCount(prev => prev + 1) is a better way as here prev will always be the updated state value
+   e.g. 
+   assume count -> 0 initially,
+   setCount(count+1)
+   setCount(count+1)
+   setCount(count+1) 
+   at the end the count will be updated to 1, 
+   Reason => it schedules 3 updates and all will be updating to same value
+   setCount(0+1) or setCount(1),
+   setCount(0+1) or setCount(1),
+   setCount(0+1) or setCount(1)
+   if we want count to be updated to 3, it can be acheived using functional updates
+   setCount(prev => prev + 1)
+   setCount(prev => prev + 1)
+   setCount(prev => prev + 1)
+   here prev will always be the updated state value, so it will behave like
+   setCount(0+1)
+   setCount(1+1)
+   setCount(2+1)
+   and the final output will be 3.
+5) initialState 
+   we can provide the initial value and when the component renders for the first time, that will be the value assigned to
+   the state variable, 
+   react keeps the track when a component is rendering for the first time and when it re-renders, the initial State will be
+   assigned to state variable only in the first render.
+6) state variable are immutable, i.e. we can not modify the state variables without setter function.
+   consider the example
+   const [user, setUser] = useState({name:"Sachin", age: 26})
+   user.age = 29
+   setUser(user) => doesn't effect the state value.
+7) state setter does not merge the state but replaces it completely
+   in the previous example
+   setUser({age: 29}) -> user => { age: 29 } => name is lost.
+   correct way is 
+   setUser({...user, age: 29})
+8) If the state's updated value is same, then react skip the re-render
+9) Avoid maintaining multiple local states in a component, as it makes the component complex and difficult to manage,
+   instead we can group the similar states,
+   e.g.
+    const [firstName, setFirstName] = useState("")
+    const [lastName, setLastName] = useState("")
+    const [email, setEmail] = useState("")
+    instead we can use
+    const [userDetail, setUserDetail] = useState({
+      firstName: '',
+      lastName: '',
+      email: '',
+    })
+10) Avoid Derived states
+    avoid states dependent on props or other state values.
+11) lazy initialization
+
+Questions
+1) Why are hooks order-dependent?
+   It is about the React's mechanism on how it stores the hooks in the first render and how it access the hooks in re-renders.
+   In the first render, React creates a fiber for that component instance and executes the function code line by line,
+   for each of the hook call, React stores the hook as a node in a linked list. Each node stores all the info about that
+   hook call. Now in every re-render the hooks will be call again in the same order, and this time it doesn't create the linked
+   list but access the existing hooks from the linked list, and returns the current state value and the stable setter function.
+   React identifies each of the hooks by their order. so the hooks are order dependet.
+
+2) Why can’t we call useState inside conditions?
+   if we call useState inside a condition then during the render, this hook call may be there or may not be there depending 
+   on the condition,
+   lets assume the condition is true in the first render and the hook call is there, so react will store this hook at the nth
+   node in the linked list. Consider a re-render where the condition is false now hook call is not there but React still has
+   a hook at the nth place corresponding to this hook call and the (n+1)th hook can be confused with nth hook and that
+   will mess up the entire structure.
+   so we can't use useState inside conditions.
+
+3) What happens internally when setState is called?
+   when setState is called it will bascially do two things
+   i) it schedules a render
+       it keeps a flag somewhere in the fiber which will let the react know that this fiber needs a re-render.
+   ii) add the update in the update queue.
+      before rendering the fiber, react will go through the update queue and use the final updated value.
+  so, setState doesn't update the state immediately but it schedules a render with the updated value.
+
+4) Why is state update asynchronous?
+   state updates in react are asynchronous, that means when setState function is called it doesn't update the state immediately
+   but it schedules an update and then the program goes to the next line without waiting for setState task,
+   why it is asynchronous
+   we can state two reasons(or benifits)
+   i) it waits for the current execution context to be finished so that it can take all the updates into consideration
+   ii) it groups multiple updates and re-render only with the final updated value (not with intermittent updates)
+
+5) What is batching?
+   batching is a mechanism of React where it groups multiple updates together, then while updating the state it only re-render
+   the component with the final updated value.
+
+6) What is stale closure?
+   stale closeure means that a callback function(setTimeout, setInterval etc) makes a closure with the old state value, and 
+   remembers its old value. This may lead to unexpected bugs in our code.
+   To avoid stale closure we can use functional updates
+
+7) How does React know which state belongs to which component?
+   React Knows which state belongs to which component, as it maintains a fiber node for each of the component instance, and each
+   fiber stores its own linked list of hooks. Each of the list node has state/setter function corresponding to that hook call.
+
+8) Why does mutating state sometimes not re-render?
+   mutating state may not re-render in the following cases,
+   i) the state value is not changed -> 
+        react realise that the state value is still the same even after the update, 
+        so it skips the re-render for performance optimization
+        behind the scene react uses Object.is() method to compare the references of the old and new value.
+   ii) batch udpates => if there are many updates scheduled, then the last one will appear on UI.
+        so even multiple setState() calls may lead to only one render as the intermittent udpates are ignored in this case.
+
+9) What is lazy initialization?
+   lazy initialization refers to using function for giving the initial value to useState call,
+   e.g. 
+   const [user, setUser] = useState({name: 'ABC'})
+   const [use, setUser] = useState(() => ({name: 'ABC'}))
+   in first case React creates the object literal in every render but uses it only for the first render.
+   second is the case with lazy initialization, here react call this function only in the first render and hence in other renders
+   the unnecessery step of creating the object will not occur.
+   the benifit of lazy initialization seems noticable when we are doing some heavy calculation for initial value.
+   useState(heavyCalculation()) vs useState(() => heavyCalculation())
+   in case of lazy initialization the heavy calculation will only be done once in the first render, but in the other case this
+   calculation is being done on every render but used only in the first render.
+
+10) When should we prefer useReducer over useState?
+   useState is prefered when the state is locally used and updated, and shared only to children or grandchildren.
+   useReducer is used when many of the components are using the state, and the state is being shared among, children, parents,
+   and siblings
+
+whats the output
+11) 
+   const [count, setCount] = useState(0);
+   setCount(count + 1);
+   setCount(count + 1);
+   console.log(count);
+   output => 0
+12) 
+   setCount(prev => prev + 1);
+   setCount(prev => prev + 1);
+   final state  => 2
+13) Will it re-render?
+   const [obj, setObj] = useState({ a: 1 });
+   setObj(obj);
+   no - as no change in state value, so react will skip the re-render
+14) Re-render?
+   const [x, setX] = useState(0);
+   setX(0);
+   no - as there is no change in the state value.
+15) Re-render?
+   const [arr, setArr] = useState([1,2]);
+   arr.push(3);
+   setArr(arr);
+   no - as states are immutable so arr.push(3) will not change arr, and setArr(arr) will not notice a change in value.
+16) What happens if setter is called during render?
+   it will cause infinite renders => why , when setter is called it will schedule a render, then during that render again the
+   setter is called and again a render will be scheduled, and it will go on and on.
+   and it will keep rendering until react hits its safety limit and then stops.
+
+17) Can useState cause infinite loop?
+   yes, if the setter is called during a render. Its not exactly inifinite number of times as react will stop by itself when
+   the safety limit exceeds.
+
+18) What if state update depends on props?
+    it can sometime lead to unexpected results, consider the case
+    const [user, setUser] = useState({email: props.email})
+    let say we are using user state in a form and expecting email as pre-populated value as it is already availble,
+    asumme that after fist render the email prop is updated, the updated value will not be a part of initial State in user
+    and when user open the form component he will not see the updated email but he will see the value with which user
+    was rendered first time.
+
+19) How does React compare state values?
+   React compares the state values using the reference equality, specifically the Object.is() algorithm.
+   whenver the state changes react checks it by Object.is(oldValue, newValue) 
+   if both values are same it skips the re-render.
+   in case of objects/arrays, it compares the reference and not the value
+   e.g. 
+    const [user, setUser] = useState({ name: "Sachin"})
+    setUser({name: "Sachin"})
+    it will cause a re-render as this object is a different one.
+
+20) What if you pass object as initial state directly vs function?
+   if we pass an object as initial state directly, the object literal is created in every render but it is ignored everytime after
+   the first render, 
+   although it is ignored after the first render but the creation time is still there, and if its a time taking operation 
+   the computation will be there in every render but the value is ignored.
+   to avoid this we can use a function
+   now this function will also return the initialState object but it runs only once, and we can avoid creating the object everytime.
+   its very usefull if the initial state includes very heavy calculations
+
+21) Does setter identity change between renders?
+    no, react ensures that for each render the setter function is same, or has the same reference or has the same identity.
+    How React does it
+    in the first render, react creates a new node for each of the hook call in the linked list, then in the re-renders
+    react does not create a new node but goes to that node and return the existing setter function for that hook call.
+
+22) Can we store function in state?
+   yes, we can store functions in state, the only thing to take care about is initial value, 
+   if we just give the initial value as a function it will think of it as lazy initialization function, so we need to return the
+   initial value of the function from a function.
+   e.g. const [fn, setFn] = useState(() => { return () => console.log("I am the initial value fn")})
+
+23) Why sometimes setState doesn’t update immediately?
+    setState NEVER updates state immediately inside the same render.
+    sometimes the result may appear so fast that it appears to be immediate,
+
+24) How to force re-render?
+    in function components, react doesn't provide an API for force re-render. we can do force re-render with the help of useState() or 
+    useReducer() hooks by maintaining dummy states and use stateSetter function for force re-render.
+    in class components, react provide this.forceUpdate() for the same.
+
+25) What happens if parent re-renders but state unchanged?
+    whenever a parent re-renders the child components will also be re-rendered.
+    
+26) How does React store hooks internally?
+    Internelly, React maintians a fiber for each instance of a component,
+    this fiber is a js object which stores all the information about that component,
+    it stores the Hooks in linked list, where all the hooks are maintained by their order.
+
+ 27) What is Fiber?
+     a Fiber simply is a js object. React maintains a Fiber for each component instance, it stores all the things
+     about that component.
+
+ 28) What is hook linked list?
+     React stores all the hook as a linked list in a fiber.
+
+ 29) How does React know which setter belongs to which state?
+
+What is state queue?
+
+What is update lane?
+
+How does concurrent rendering affect state?
+
+What is render phase vs commit phase?
+
+What happens if two renders happen before commit?
+
+Why does React use Object.is for comparison?
+
+When to split state vs combine?
+
+How to prevent unnecessary re-renders?
+
+When to lift state up?
+
+When to move state to context?
+
+When should state be server state instead?
+

@@ -1,0 +1,129 @@
+useEffect is a react hook use to run side-effects in a functional component.
+basic syntax
+useEffect(() => {
+  // side effect code
+  return () => {
+    // cleanup code (optional)
+  };
+}, [dependencies]);
+example
+import { useEffect } from 'react'
+function Counter() {
+ useEffect(() => { 
+  console.log("I am a side effect inside a useEffect")
+ },[])
+return (<>
+  <p> Hello </P>
+</>)
+}
+KeyPoints
+1) when does useEffect runs
+  (i) No Dependency array 
+        -> useEffect runs on every render
+  ii) Empty dependency array
+       -> useEffect runs only on the first render
+  iii) dependency array has elements [a,b]
+       -> useEffect runs on first render as well as whenever a, or b, or both changes
+
+2) when does the cleanup function runs
+   clean up runs before the next effect runs and when the component unmounts.
+3) Execution Timeline
+    Render phase:
+      React builds Fiber tree
+      Hooks stored in linked list
+      DOM calculated
+    Commit phase:
+      DOM updated
+      Browser paints
+      THEN useEffect runs
+  👉 Important:
+      useEffect runs after paint.
+4) Why Dependency Array is Important?
+    React compares dependencies using:
+    Object.is(oldValue, newValue)
+    So:
+    Primitives → compared by value
+    Objects/arrays/functions → compared by reference
+    Example problem:
+    useEffect(() => {
+      console.log("Runs every time");
+    }, [{}]); // new object each render
+
+This runs every time because object reference changes.
+5) Infinite Loop Example
+  useEffect(() => {
+    setCount(count + 1);
+  }, [count]);
+  Why infinite?
+    count changes
+    effect runs
+    setCount updates count
+    re-render
+    effect runs again
+6) How React Stores useEffect Internally (Fiber Level)
+    Inside Fiber:
+      Each hook stored in memoizedState linked list.
+      For useEffect, React stores:
+      effect callback
+      dependency array
+      cleanup function
+      next pointer
+      During commit phase:
+      React checks dependency changes
+      If changed → schedules effect
+      After paint → runs effect
+
+7) Rules of useEffect
+    Must be at top level
+    Cannot be conditional
+    Must not return anything except cleanup function
+    Dependency array must include all used external values
+ 8) How React Knows Dependencies Changed?
+    React stores previous dependency array.
+    On next render:
+    Object.is(prevDep[i], nextDep[i])
+    If any is false → effect re-runs.
+9) Multiple useEffects in Same Component
+useEffect(() => {
+  console.log("Effect A");
+}, []);
+useEffect(() => {
+  console.log("Effect B");
+}, []);
+
+Execution order:
+Effect A
+Effect B
+In the order written.
+10) Why useEffect Exists (History)
+    Before React 16.8:
+    We used class lifecycle methods:
+    componentDidMount
+    componentDidUpdate
+    componentWillUnmount
+    After React 16.8:
+  Hooks introduced → useEffect unified all of them.
+11) Strict Mode Double Execution (Very Important)
+
+In development mode:
+
+React intentionally runs effects twice (mount → cleanup → mount).
+
+Why?
+
+To detect unsafe side effects.
+
+Production → runs once.
+12) Advanced: Effect Scheduling in Concurrent Mode
+
+React may:
+
+Pause render
+
+Restart render
+
+Discard render
+
+But effect only runs after commit phase.
+
+
