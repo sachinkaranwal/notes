@@ -48,18 +48,17 @@ KeyPoints
     useEffect(() => {
       console.log("Runs every time");
     }, [{}]); // new object each render
-
-This runs every time because object reference changes.
+    This runs every time because object reference changes.
 5) Infinite Loop Example
-  useEffect(() => {
-    setCount(count + 1);
-  }, [count]);
-  Why infinite?
-    count changes
-    effect runs
-    setCount updates count
-    re-render
-    effect runs again
+    useEffect(() => {
+      setCount(count + 1);
+    }, [count]);
+    Why infinite?
+      count changes
+      effect runs
+      setCount updates count
+      re-render
+      effect runs again
 6) How React Stores useEffect Internally (Fiber Level)
     Inside Fiber:
       Each hook stored in memoizedState linked list.
@@ -78,42 +77,36 @@ This runs every time because object reference changes.
     Cannot be conditional
     Must not return anything except cleanup function
     Dependency array must include all used external values
- 8) How React Knows Dependencies Changed?
+8) How React Knows Dependencies Changed?
     React stores previous dependency array.
     On next render:
     Object.is(prevDep[i], nextDep[i])
     If any is false → effect re-runs.
 9) Multiple useEffects in Same Component
-useEffect(() => {
-  console.log("Effect A");
-}, []);
-useEffect(() => {
-  console.log("Effect B");
-}, []);
-
-Execution order:
-Effect A
-Effect B
-In the order written.
+  useEffect(() => {
+    console.log("Effect A");
+  }, []);
+  useEffect(() => {
+    console.log("Effect B");
+  }, []);
+  Execution order:
+    Effect A
+    Effect B
+  In the order written.
 10) Why useEffect Exists (History)
     Before React 16.8:
-    We used class lifecycle methods:
-    componentDidMount
-    componentDidUpdate
-    componentWillUnmount
+      We used class lifecycle methods:
+        componentDidMount
+        componentDidUpdate
+        componentWillUnmount
     After React 16.8:
-  Hooks introduced → useEffect unified all of them.
+      Hooks introduced → useEffect unified all of them.
 11) Strict Mode Double Execution (Very Important)
-
-In development mode:
-
-React intentionally runs effects twice (mount → cleanup → mount).
-
-Why?
-
-To detect unsafe side effects.
-
-Production → runs once.
+    In development mode:
+      React intentionally runs effects twice (mount → cleanup → mount).
+      Why?
+        To detect unsafe side effects.
+    In Production mode → runs once.
 12) Advanced: Effect Scheduling in Concurrent Mode
 
 React may:
