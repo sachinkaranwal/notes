@@ -1,0 +1,14 @@
+what is a Hook in React?
+React Hooks are special functions that let you use React features like state, lifecycle behavior, refs, context, and side effects inside function components.
+
+we can say - They let a function component “hook into” React’s internal system.
+A hook is called a hook because your component is “hooking into” React.
+
+A plain function component by itself is just a JavaScript function that returns JSX.
+It does not naturally have access to things like:
+
+A hook always starts with 'use', like:
+useState
+useEffect
+useRef
+useContext
