@@ -76,6 +76,9 @@ Key Points
 10) Avoid Derived states
     avoid states dependent on props or other state values.
 11) lazy initialization
+      Instead of passing the initial value directly, you pass a function that returns the initial value.
+      React will call that function only during the initial render. it helps avoid repeating expensive initialization logic 
+      on every render.
 
 Questions
 1) Why are hooks order-dependent?
@@ -194,7 +197,7 @@ whats the output
 
 19) How does React compare state values?
    React compares the state values using the reference equality, specifically the Object.is() algorithm.
-   whenver the state changes react checks it by Object.is(oldValue, newValue) 
+   whenrver the state changes react checks it by Object.is(oldValue, newValue) 
    if both values are same it skips the re-render.
    in case of objects/arrays, it compares the reference and not the value
    e.g. 
