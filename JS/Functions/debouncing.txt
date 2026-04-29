@@ -1,0 +1,190 @@
+Debouncing is a performance optimization technique where a function is executed only after a certain amount of time has 
+passed since the last time it was called.
+
+In simple words: Debouncing waits for execution until the user stops doing an action, then execute the function.
+
+Example:
+  When a user types in a search box:
+  r
+  re
+  rea
+  reac
+  react
+  Without debouncing, API calls may happen for every key press.
+  With debouncing, API call happens only after the user stops typing for, example, 500ms.
+
+1) Why Debouncing is Needed?
+    Debouncing is used to prevent expensive operations from running too frequently.
+    Common expensive operations
+    API calls
+    Search filtering
+    Window resize calculations
+    Scroll calculations
+    Form validation
+    Saving draft
+    Autocomplete suggestions
+
+2) Common Use Cases of Debouncing
+    2.1) Search Input
+        User types: "react"
+        Without debounce:
+        API call for r
+        API call for re
+        API call for rea
+        API call for reac
+        API call for react
+        With debounce:
+        Only one API call for react
+    2.2) Auto-Save
+        Example: Google Docs style auto-save.
+        You do not want to save on every keystroke.
+        You want to save after the user stops typing for some time.
+    2.3) Window Resize
+        window.addEventListener("resize", handleResize);
+        Resize event fires many times continuously.
+        Debouncing helps calculate layout only after resizing stops.
+    2.4) Form Validation
+        Instead of validating on every key press:
+        a
+        ab
+        abc
+        abcd
+        Validate after user stops typing.
+
+3) Basic Debounce Function
+    function debounce(callback, delay) {
+        let timerId;
+        return function (...args) {
+            clearTimeout(timerId);
+
+            timerId = setTimeout(() => {
+            callback(...args);
+            }, delay);
+        };
+    }
+    
+    usage:
+    function search(value) {
+        console.log("API call for:", value);
+    }
+
+    const debouncedSearch = debounce(search, 500);
+
+    debouncedSearch("r");
+    debouncedSearch("re");
+    debouncedSearch("rea");
+    debouncedSearch("react");
+
+    Only this runs: API call for: react
+
+4) How Debouncing Works Internally
+    Every time the returned function is called:
+    clearTimeout(timerId);
+    It cancels the previous timer.
+    Then:
+    timerId = setTimeout(...)
+    It starts a new timer.
+    So the function executes only when no new call happens during the delay period.
+
+5) Step-by-Step Flow
+    const debouncedSearch = debounce(search, 500);
+    Now user types:
+    t = 0ms    "r"      timer starts
+    t = 100ms  "re"     previous timer cancelled, new timer starts
+    t = 200ms  "rea"    previous timer cancelled, new timer starts
+    t = 300ms  "reac"   previous timer cancelled, new timer starts
+    t = 400ms  "react"  previous timer cancelled, new timer starts
+    t = 900ms  API call happens
+    Because after react, user stopped typing for 500ms.
+
+6) Debounce with this Handling
+    The basic debounce loses correct this in some cases.
+    Better version:
+    function debounce(callback, delay) {
+        let timerId;
+
+        return function (...args) {
+            const context = this;
+
+            clearTimeout(timerId);
+
+            timerId = setTimeout(() => {
+            callback.apply(context, args);
+            }, delay);
+        };
+    }
+    Why apply?
+    Because it preserves:
+    this
+    arguments
+
+7) Debouncing in Input Search
+    HTML:
+        <input id="search" placeholder="Search..." />
+    JavaScript:
+        const input = document.getElementById("search");
+        function fetchSearchResults(query) {
+            console.log("Fetching results for:", query);
+        }
+        const debouncedFetch = debounce(fetchSearchResults, 500);
+        input.addEventListener("input", function (event) {
+            debouncedFetch(event.target.value);
+        });
+    Now API call happens only after typing stops.
+
+8) Debouncing in React
+    Basic React Example
+        import { useState, useEffect } from "react";
+        function SearchBox() {
+            const [query, setQuery] = useState("");
+            const [debouncedQuery, setDebouncedQuery] = useState("");
+
+            useEffect(() => {
+                const timerId = setTimeout(() => {
+                setDebouncedQuery(query);
+                }, 500);
+                return () => {
+                    clearTimeout(timerId);
+                };
+            }, [query]);
+
+            useEffect(() => {
+                if (debouncedQuery) {
+                    console.log("API call for:", debouncedQuery);
+                }
+            }, [debouncedQuery]);
+
+            return (
+                <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search..."
+            />
+            );
+        }
+
+9) Important React Explanation
+    This part is very important for interviews.
+    useEffect(() => {
+        const timerId = setTimeout(() => {
+            setDebouncedQuery(query);
+        }, 500);
+
+        return () => {
+            clearTimeout(timerId);
+        };
+    }, [query]);
+
+    Every time query changes:
+
+    React runs cleanup of previous effect.
+    Previous timer is cancelled.
+    New timer starts.
+    If user stops typing for 500ms, timer completes.
+    debouncedQuery updates.
+    API call happens.
+
+    So React cleanup is doing the debounce cancellation.
+
+10) Custom useDebounce Hook
+    

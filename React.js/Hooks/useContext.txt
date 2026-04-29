@@ -1,0 +1,8 @@
+useContext is a React Hook that lets a component read and subscribe 
+to a context value from the nearest matching Provider above it in the component tree.
+
+In simple words:
+
+createContext() creates a shared data channel.
+A Provider puts a value into that channel.
+useContext() reads that value from any descendant component.
