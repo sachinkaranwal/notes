@@ -1,0 +1,6 @@
+Throttling is a performance optimization technique where a function is allowed to run at most once in a fixed time interval,
+no matter how many times the event is triggered.
+
+Simple definition:
+Throttling limits how often a function can execute.
+
